@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Einsatzlohn // Schichtabrechner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0f14;
+    --panel: #131922;
+    --panel-2: #0f141b;
+    --line: #232c38;
+    --text: #eef2f6;
+    --muted: #7c8896;
+    --fw: #e8583a;
+    --fw-dim: #3a2018;
+    --pol: #3d7bf2;
+    --pol-dim: #182338;
+    --sonst: #f2b705;
+    --sonst-dim: #332a08;
+    --ok: #3ddc84;
+    --accent: var(--pol);
+    --accent-dim: var(--pol-dim);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(61,123,242,0.08), transparent 40%),
+      radial-gradient(circle at 85% 100%, rgba(232,88,58,0.06), transparent 45%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    padding:28px 18px 60px;
+  }
+
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  header{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;margin-bottom:26px;
+  }
+  .brand-eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;letter-spacing:.18em;color:var(--muted);
+    text-transform:uppercase;margin-bottom:6px;
+  }
+  h1{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size:clamp(28px, 4.5vw, 42px);
+    letter-spacing:.01em;
+    margin:0;line-height:1;
+    text-transform:uppercase;
+  }
+  h1 span{color:var(--accent);transition:color .25s ease;}
+  .clock{
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;color:var(--muted);
+    text-align:right;
+  }
+  .clock b{color:var(--text);font-size:20px;display:block;letter-spacing:.05em;}
+
+  .grid{
+    display:grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap:24px;
+    align-items:start;
+  }
+  @media (max-width: 820px){.grid{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:22px;
+  }
+
+  .section-label{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 12px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .section-label::before{
+    content:"";width:6px;height:6px;background:var(--accent);
+    display:inline-block;border-radius:1px;transition:background .25s ease;
+  }
+
+  .tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+  .tab{
+    font-family:'Oswald', sans-serif;
+    font-weight:600;font-size:14px;letter-spacing:.03em;text-transform:uppercase;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--muted);
+    padding:10px 16px;border-radius:7px;cursor:pointer;
+    transition:all .15s ease;
+  }
+  .tab:hover{color:var(--text);border-color:#3a4656;}
+  .tab.active[data-cat="feuerwehr"]{background:var(--fw-dim);border-color:var(--fw);color:var(--fw);}
+  .tab.active[data-cat="polizei"]{background:var(--pol-dim);border-color:var(--pol);color:var(--pol);}
+  .tab.active[data-cat="sonstige"]{background:var(--sonst-dim);border-color:var(--sonst);color:var(--sonst);}
+  .tab.active[data-mode] {background:var(--line);border-color:var(--muted);color:var(--text);}
+
+  .jobs{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:24px;}
+  @media (max-width:480px){.jobs{grid-template-columns:1fr;}}
+
+  .job-btn{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:13px 14px;
+    cursor:pointer;
+    color:var(--text);
+  }
+  .job-btn.selected[data-cat="feuerwehr"]{border-color:var(--fw);background:var(--fw-dim);}
+  .job-btn.selected[data-cat="polizei"]{border-color:var(--pol);background:var(--pol-dim);}
+  .job-btn.selected[data-cat="sonstige"]{border-color:var(--sonst);background:var(--sonst-dim);}
+  .job-btn .name{font-family:'Oswald',sans-serif;font-size:15px;}
+  .job-btn .mult{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);background:var(--bg);padding:3px 7px;border-radius:5px;}
+
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .field{display:flex;flex-direction:column;gap:7px;}
+  .field.full{grid-column:1 / -1;}
+  label{font-family:'JetBrains Mono', monospace;font-size:11px;color:var(--muted);text-transform:uppercase;}
+  input{background:var(--panel-2);border:1px solid var(--line);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:16px;padding:11px;border-radius:7px;width:100%;}
+  .time-row{display:flex;align-items:center;gap:10px;}
+
+  .ticket-outer{position:sticky;top:20px;}
+  .ticket{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .ticket-stripe{height:7px;background:var(--accent);}
+  .ticket-body{padding:22px 22px 6px;}
+  .ticket-row{display:flex;justify-content:space-between;font-family:'JetBrains Mono', monospace;font-size:13.5px;padding:7px 0;color:var(--muted);border-bottom:1px dashed var(--line);}
+  .ticket-row b{color:var(--text);}
+  .ticket-total{padding:18px 22px 22px;}
+  .ticket-total .amount{font-family:'JetBrains Mono', monospace;font-weight:700;font-size:32px;color:var(--ok);}
+  .sub{font-family:'JetBrains Mono', monospace;font-size:12px;color:var(--muted);margin-top:5px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand-eyebrow">Leitstelle // Gehaltsabrechnung</div>
+      <h1>Einsatz<span id="titleAccent">lohn</span></h1>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="panel">
+      <p class="section-label">Kategorie</p>
+      <div class="tabs" id="tabs">
+        <button class="tab active" data-cat="feuerwehr">Feuerwehr</button>
+        <button class="tab" data-cat="polizei">Polizei</button>
+        <button class="tab" data-cat="sonstige">Sonstige</button>
+      </div>
+
+      <p class="section-label">Modus</p>
+      <div class="tabs" id="modeTabs">
+        <button class="tab active mode-tab" data-mode="toEUR">XP → Geld</button>
+        <button class="tab mode-tab" data-mode="toXP">Geld → XP</button>
+      </div>
+
+      <p class="section-label">Job</p>
+      <div class="jobs" id="jobs"></div>
+
+      <div class="fields">
+        <div class="field" id="fieldXp">
+          <label>XP (30 € / XP)</label>
+          <input type="number" id="xp" value="0">
+        </div>
+        <div class="field" id="fieldZiel" style="display:none;">
+          <label>Zielbetrag (€)</label>
+          <input type="number" id="ziel" value="0">
+        </div>
+        <div class="field">
+          <label>CP (%)</label>
+          <input type="range" id="cp" min="0" max="100" value="100">
+        </div>
+        <div class="field full">
+          <label>Schichtdauer</label>
+          <div class="time-row">
+            <input type="number" id="mins" value="0" placeholder="Min">
+            <input type="number" id="secs" value="0" placeholder="Sek">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ticket-outer">
+      <div class="ticket">
+        <div class="ticket-stripe" id="stripe"></div>
+        <div class="ticket-body">
+          <div class="ticket-row"><span id="ticketJob">Rettungsdienst</span><b id="ticketCat">FEUERWEHR</b></div>
+          <div class="ticket-row" id="rowXpWrap"><span>XP</span><b id="rowXp">0</b></div>
+          <div class="ticket-row" id="rowZielWrap" style="display:none;"><span>Zielbetrag</span><b id="rowZiel">0 €</b></div>
+          <div class="ticket-row"><span>Multiplikator</span><b id="rowMult">×1.0</b></div>
+          <div class="ticket-row" id="rowExactXpWrap" style="display:none;"><span>Erforderlich</span><b id="rowExactXp">0</b></div>
+        </div>
+        <div class="ticket-total">
+          <div class="section-label" id="totalLabel">Gesamtauszahlung</div>
+          <div class="amount" id="totalAmount">0,00 €</div>
+          <div class="sub" id="perMinute">Pro Minute: 0,00 €</div>
+          <div class="sub" id="perSecond">Pro Sekunde: 0,00 €</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATS = {
+  feuerwehr: { jobs: [{name:'Rettungsdienst', mult:1.0}, {name:'Feuerwehr', mult:1.0}, {name:'Notarzt', mult:1.2}, {name:'Einsatzleiter', mult:1.3}] },
+  polizei: { jobs: [{name:'Streife', mult:1.0}, {name:'Verkehrspolizei', mult:1.1}, {name:'SEK', mult:1.3}, {name:'Zivil', mult:1.2}] },
+  sonstige: { jobs: [{name:'ADAC', mult:1.3}, {name:'Busfahrer', mult:1.2}, {name:'LKW-Fahrer', mult:1.2}] }
+};
+const COLORS = {feuerwehr:'#e8583a', polizei:'#3d7bf2', sonstige:'#f2b705'};
+
+let state = { cat: 'feuerwehr', jobIndex: 0, mode: 'toEUR' };
+
+function fmtEUR(n) { return n.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €'; }
+
+function calculate() {
+  const cp = parseInt(document.getElementById('cp').value) / 100;
+  const mins = parseInt(document.getElementById('mins').value) || 0;
+  const secs = parseInt(document.getElementById('secs').value) || 0;
+  const totalSecs = mins * 60 + secs;
+  const job = CATS[state.cat].jobs[state.jobIndex];
+
+  if(state.mode === 'toEUR') {
+    const xp = parseInt(document.getElementById('xp').value) || 0;
+    const total = xp * 30 * job.mult * cp;
+    document.getElementById('totalAmount').textContent = fmtEUR(total);
+    document.getElementById('rowXp').textContent = xp;
+    document.getElementById('perMinute').textContent = totalSecs > 0 ? `Pro Minute: ${fmtEUR(total / (totalSecs/60))}` : '—';
+    document.getElementById('perSecond').textContent = totalSecs > 0 ? `Pro Sekunde: ${fmtEUR(total / totalSecs)}` : '—';
+  } else {
+    const ziel = parseInt(document.getElementById('ziel').value) || 0;
+    const rate = 30 * job.mult * cp;
+    const neededXp = rate > 0 ? Math.ceil(ziel / rate) : 0;
+    document.getElementById('totalAmount').textContent = neededXp + ' XP';
+    document.getElementById('rowZiel').textContent = fmtEUR(ziel);
+    document.getElementById('rowExactXp').textContent = rate > 0 ? (ziel/rate).toFixed(2) : "0";
+    document.getElementById('perMinute').textContent = `Bei ${neededXp} XP: ${fmtEUR(neededXp * rate)}`;
+    document.getElementById('perSecond').textContent = totalSecs > 0 ? `Benötigtes Tempo: ${(neededXp / (totalSecs/60)).toFixed(1)} XP/Min` : '—';
+  }
+  
+  document.getElementById('ticketJob').textContent = job.name;
+  document.getElementById('ticketCat').textContent = state.cat.toUpperCase();
+  document.getElementById('rowMult').textContent = '×' + job.mult.toFixed(1);
+  document.getElementById('stripe').style.background = COLORS[state.cat];
+  document.getElementById('titleAccent').style.color = COLORS[state.cat];
+}
+
+document.getElementById('modeTabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.mode-tab');
+  if(!btn) return;
+  state.mode = btn.dataset.mode;
+  document.querySelectorAll('.mode-tab').forEach(b => b.classList.toggle('active', b === btn));
+  document.getElementById('fieldXp').style.display = (state.mode === 'toEUR') ? 'flex' : 'none';
+  document.getElementById('fieldZiel').style.display = (state.mode === 'toXP') ? 'flex' : 'none';
+  document.getElementById('rowXpWrap').style.display = (state.mode === 'toEUR') ? 'flex' : 'none';
+  document.getElementById('rowZielWrap').style.display = (state.mode === 'toXP') ? 'flex' : 'none';
+  document.getElementById('rowExactXpWrap').style.display = (state.mode === 'toXP') ? 'flex' : 'none';
+  calculate();
+});
+
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tab');
+  if(!btn || !btn.dataset.cat) return;
+  state.cat = btn.dataset.cat;
+  state.jobIndex = 0;
+  document.querySelectorAll('#tabs .tab').forEach(b => b.classList.toggle('active', b === btn));
+  renderJobs();
+  calculate();
+});
+
+function renderJobs(){
+  const container = document.getElementById('jobs');
+  container.innerHTML = '';
+  CATS[state.cat].jobs.forEach((job, i)=>{
+    const b = document.createElement('button');
+    b.className = 'job-btn' + (i === state.jobIndex ? ' selected' : '');
+    b.dataset.cat = state.cat;
+    b.innerHTML = `<span class="name">${job.name}</span><span class="mult">×${job.mult.toFixed(1)}</span>`;
+    b.onclick = () => { state.jobIndex = i; renderJobs(); calculate(); };
+    container.appendChild(b);
+  });
+}
+
+['xp','ziel','cp','mins','secs'].forEach(id => document.getElementById(id).addEventListener('input', calculate));
+renderJobs();
+calculate();
+</script>
+</body>
+</html>
