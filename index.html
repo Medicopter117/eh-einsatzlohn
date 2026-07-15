@@ -60,7 +60,7 @@
       <div class="fields">
         <div class="field" id="fieldXp"><label>XP</label><input type="number" id="xp" value="0"></div>
         <div class="field" id="fieldZiel" style="display:none;"><label>Zielbetrag (€)</label><input type="number" id="ziel" value="0"></div>
-        <div class="field"><label>CP (%)</label><input type="range" id="cp" min="0" max="100" value="100"></div>
+        <div class="field" id="fieldCp"><label>CP (%)</label><input type="range" id="cp" min="0" max="100" value="100"></div>
         <div class="field full" id="fieldDuration"><label>Schichtdauer</label><div style="display:flex;gap:10px;"><input type="number" id="mins" value="0" placeholder="Min"><input type="number" id="secs" value="0" placeholder="Sek"></div></div>
       </div>
     </div>
@@ -90,7 +90,7 @@ let state = { cat: 'feuerwehr', jobIndex: 0, mode: 'toEUR' };
 
 function calc() {
   const job = CATS[state.cat].jobs[state.jobIndex];
-  const cp = parseInt(document.getElementById('cp').value) / 100;
+  const cp = (state.mode === 'toEUR') ? parseInt(document.getElementById('cp').value) / 100 : 1.0;
   const mins = parseInt(document.getElementById('mins').value) || 0;
   const secs = parseInt(document.getElementById('secs').value) || 0;
   
@@ -109,7 +109,7 @@ function calc() {
     document.getElementById('subInfo').textContent = (mins*60+secs) > 0 ? `Pro Min: ${(total/((mins*60+secs)/60)).toFixed(2)} €` : '';
   } else {
     const ziel = parseInt(document.getElementById('ziel').value) || 0;
-    const rate = 30 * job.mult * cp;
+    const rate = 30 * job.mult;
     const needed = rate > 0 ? Math.ceil(ziel / rate) : 0;
     document.getElementById('totalAmount').textContent = needed + ' XP';
     document.getElementById('totalLabel').textContent = 'Benötigte XP';
@@ -131,6 +131,7 @@ document.getElementById('modeTabs').addEventListener('click', (e) => {
   document.querySelectorAll('#modeTabs .tab').forEach(t => t.classList.toggle('active', t === btn));
   document.getElementById('fieldXp').style.display = (state.mode === 'toEUR') ? 'flex' : 'none';
   document.getElementById('fieldZiel').style.display = (state.mode === 'toXP') ? 'flex' : 'none';
+  document.getElementById('fieldCp').style.display = (state.mode === 'toEUR') ? 'flex' : 'none';
   document.getElementById('fieldDuration').style.display = (state.mode === 'toEUR') ? 'flex' : 'none';
   document.getElementById('durationClock').style.display = (state.mode === 'toEUR') ? 'block' : 'none';
   document.getElementById('rowXpWrap').style.display = (state.mode === 'toEUR') ? 'flex' : 'none';
