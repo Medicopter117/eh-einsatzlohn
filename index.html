@@ -112,6 +112,23 @@
   .heatmap-cell[data-level="4"]{ background:var(--ok); border-color:var(--ok); }
   .heatmap-legend{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); margin-top:10px; justify-content:flex-end; }
   .heatmap-legend .heatmap-cell{ width:11px; height:11px; }
+
+  .goal-block{ margin-bottom:18px; }
+  .goal-row{ display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .goal-row input{ max-width:150px; }
+  .progress-track{ background:var(--panel-2); border:1px solid var(--line); border-radius:999px; height:16px; overflow:hidden; margin:8px 0; }
+  .progress-fill{ height:100%; background:var(--ok); border-radius:999px; transition:width .3s; }
+  .progress-fill.xp-fill{ background:var(--sonst); }
+  .progress-text{ font-size:12px; color:var(--muted); display:flex; justify-content:space-between; }
+
+  .chart-svg-wrap{ width:100%; overflow-x:auto; }
+  .chart-svg-wrap svg{ width:100%; height:auto; display:block; }
+  .chart-svg-wrap rect{ transition:opacity .15s; }
+  .chart-svg-wrap rect:hover{ opacity:.75; }
+  .chart-axis-label{ font-size:9px; fill:var(--muted); }
+
+  .export-row{ display:flex; gap:10px; }
+  .export-row .mini-btn{ flex:1; text-align:center; }
   @media (max-width: 760px){ .grid{grid-template-columns:1fr;} .jobs{grid-template-columns:1fr;} .fields{grid-template-columns:1fr;} }
 </style>
 </head>
@@ -264,8 +281,29 @@
           </div>
         </div>
 
-        <p class="section-label" style="margin-top:6px;">Nach Stelle</p>
+        <p class="section-label" style="margin-top:22px;">Wochenziel <span style="font-weight:400;">Mo–So, aktuelle Woche</span></p>
+        <div class="goal-block">
+          <div class="goal-row">
+            <label style="margin:0;white-space:nowrap;">Ziel Geld (€)</label>
+            <input type="number" id="goalMoney" placeholder="z. B. 100000">
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="goalMoneyBarFill" style="width:0%;"></div></div>
+          <div class="progress-text"><span id="goalMoneyText">0 € / — €</span></div>
+        </div>
+        <div class="goal-block" style="margin-bottom:0;">
+          <div class="goal-row">
+            <label style="margin:0;white-space:nowrap;">Ziel XP</label>
+            <input type="number" id="goalXp" placeholder="z. B. 5000">
+          </div>
+          <div class="progress-track"><div class="progress-fill xp-fill" id="goalXpBarFill" style="width:0%;"></div></div>
+          <div class="progress-text"><span id="goalXpText">0 XP / — XP</span></div>
+        </div>
+
+        <p class="section-label" style="margin-top:22px;">Nach Stelle</p>
         <div id="categoryBreakdown"></div>
+
+        <p class="section-label" style="margin-top:22px;">Rekorde</p>
+        <div class="stat-row" id="recordsGrid"></div>
 
         <p class="section-label" style="margin-top:22px;">Aktivität <span style="font-weight:400;">letzte 18 Wochen</span></p>
         <div class="heatmap-wrap">
@@ -287,6 +325,15 @@
           Mehr
         </div>
 
+        <p class="section-label" style="margin-top:22px;">Verlauf <span style="font-weight:400;">letzte 14 Tage</span></p>
+        <div class="tabs" id="chartTabs" style="margin-bottom:14px;">
+          <button class="tab active" data-metric="money">Geld</button>
+          <button class="tab" data-metric="xp">XP</button>
+        </div>
+        <div class="chart-svg-wrap">
+          <svg id="chartSvg" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg"></svg>
+        </div>
+
         <p class="section-label" style="margin-top:22px;">Schicht eintragen <span style="font-weight:400;">XP &amp; Geld, für jede Stelle</span></p>
         <div class="fields" style="margin-bottom:0;">
           <div class="field full">
@@ -304,6 +351,13 @@
           <div class="field full"><label>Notiz (optional)</label><input type="text" id="manualXpNote" placeholder="z. B. Nachtschicht"></div>
         </div>
         <button class="add-log-btn xp-btn" id="addManualXpBtn" type="button">+ Zur Schicht hinzufügen</button>
+
+        <p class="section-label" style="margin-top:22px;">Backup <span style="font-weight:400;">lokale Datei, kein Server</span></p>
+        <div class="export-row">
+          <button class="mini-btn" id="exportBtn" type="button">Backup exportieren</button>
+          <button class="mini-btn" id="importBtn" type="button">Backup importieren</button>
+          <input type="file" id="importFile" accept="application/json" style="display:none;">
+        </div>
 
         <p class="section-label" style="margin-top:22px;">Protokoll <span id="logCount">0 Einträge</span></p>
         <div id="logEmpty" class="log-empty">Noch keine Einsätze erfasst.</div>
@@ -334,7 +388,9 @@ function saveState(){
       log: log,
       kasseTotal: kasseTotal,
       groupMember: document.getElementById('groupMember').checked,
-      crimeBoss: document.getElementById('crimeBoss').checked
+      crimeBoss: document.getElementById('crimeBoss').checked,
+      goalMoney: document.getElementById('goalMoney').value,
+      goalXp: document.getElementById('goalXp').value
     }));
   }catch(e){ console.warn('Speichern fehlgeschlagen:', e); }
 }
@@ -347,6 +403,8 @@ function loadState(){
     if(typeof data.kasseTotal === 'number') kasseTotal = data.kasseTotal;
     if(typeof data.groupMember === 'boolean') document.getElementById('groupMember').checked = data.groupMember;
     if(typeof data.crimeBoss === 'boolean') document.getElementById('crimeBoss').checked = data.crimeBoss;
+    if(data.goalMoney !== undefined) document.getElementById('goalMoney').value = data.goalMoney;
+    if(data.goalXp !== undefined) document.getElementById('goalXp').value = data.goalXp;
   }catch(e){ console.warn('Laden fehlgeschlagen:', e); }
 }
 function todayStr(){
@@ -495,6 +553,9 @@ function renderLog(){
   document.getElementById('totalXpStat').textContent = sumXp.toLocaleString('de-DE');
   document.getElementById('totalMoneyStat').textContent = fmt(sumMoney) + ' €';
   renderCategoryBreakdown(feuerwehrXp, polizeiXp, sonstigeXp, krimMoney);
+  renderWeeklyGoal();
+  renderRecords();
+  renderChart(chartMetric);
 
   renderHeatmap();
   saveState();
@@ -527,6 +588,120 @@ function renderLog(){
     });
     list.appendChild(item);
   });
+}
+
+/* ---------- Wochenziel ---------- */
+function getMondayStr(){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const dow = (now.getDay() + 6) % 7; // 0 = Montag
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - dow);
+  return toDateStr(monday);
+}
+function renderWeeklyGoal(){
+  const mondayStr = getMondayStr();
+  let weekMoney = 0, weekXp = 0;
+  log.forEach(e => {
+    if(e.date && e.date >= mondayStr){
+      if(e.type === 'eur') weekMoney += e.value;
+      weekXp += e.xp || 0;
+    }
+  });
+  const goalMoney = parseFloat(document.getElementById('goalMoney').value) || 0;
+  const goalXp = parseFloat(document.getElementById('goalXp').value) || 0;
+  const moneyPct = goalMoney > 0 ? Math.min(100, (weekMoney / goalMoney) * 100) : 0;
+  const xpPct = goalXp > 0 ? Math.min(100, (weekXp / goalXp) * 100) : 0;
+  document.getElementById('goalMoneyBarFill').style.width = moneyPct + '%';
+  document.getElementById('goalXpBarFill').style.width = xpPct + '%';
+  document.getElementById('goalMoneyText').textContent = fmt(weekMoney) + ' € / ' + (goalMoney > 0 ? fmt(goalMoney) + ' € (' + moneyPct.toFixed(0) + '%)' : '— €');
+  document.getElementById('goalXpText').textContent = weekXp.toLocaleString('de-DE') + ' XP / ' + (goalXp > 0 ? goalXp.toLocaleString('de-DE') + ' XP (' + xpPct.toFixed(0) + '%)' : '— XP');
+}
+['goalMoney','goalXp'].forEach(id => document.getElementById(id).addEventListener('input', () => { renderWeeklyGoal(); saveState(); }));
+
+/* ---------- Rekorde ---------- */
+function computeRecords(){
+  let maxSingleMoney = 0, maxSingleXp = 0;
+  const dayMoney = {}, dayXp = {};
+  log.forEach(e => {
+    if(e.type === 'eur' && e.value > maxSingleMoney) maxSingleMoney = e.value;
+    if((e.xp || 0) > maxSingleXp) maxSingleXp = e.xp;
+    if(e.date){
+      dayMoney[e.date] = (dayMoney[e.date] || 0) + (e.type === 'eur' ? e.value : 0);
+      dayXp[e.date] = (dayXp[e.date] || 0) + (e.xp || 0);
+    }
+  });
+  let bestDayMoney = 0; Object.values(dayMoney).forEach(v => { if(v > bestDayMoney) bestDayMoney = v; });
+  let bestDayXp = 0; Object.values(dayXp).forEach(v => { if(v > bestDayXp) bestDayXp = v; });
+
+  const activeDates = new Set(log.map(e => e.date).filter(Boolean));
+  let streak = 0;
+  let cur = new Date(); cur.setHours(0,0,0,0);
+  while(activeDates.has(toDateStr(cur))){ streak++; cur.setDate(cur.getDate() - 1); }
+
+  const sortedDates = Array.from(activeDates).sort();
+  let longest = 0, run = 0, prevDate = null;
+  sortedDates.forEach(dStr => {
+    const d = new Date(dStr + 'T00:00:00');
+    if(prevDate && Math.round((d - prevDate) / 86400000) === 1) run++;
+    else run = 1;
+    if(run > longest) longest = run;
+    prevDate = d;
+  });
+
+  return { maxSingleMoney, maxSingleXp, bestDayMoney, bestDayXp, streak, longest, totalShifts: log.length };
+}
+function renderRecords(){
+  const c = document.getElementById('recordsGrid');
+  if(!c) return;
+  const r = computeRecords();
+  c.innerHTML = `
+    <div class="stat-card"><span class="stat-label">Höchste Einzel-Auszahlung</span><span class="stat-value">${fmt(r.maxSingleMoney)} €</span></div>
+    <div class="stat-card"><span class="stat-label">Meiste XP (1 Eintrag)</span><span class="stat-value xp">${r.maxSingleXp.toLocaleString('de-DE')}</span></div>
+    <div class="stat-card"><span class="stat-label">Bester Tag (Geld)</span><span class="stat-value">${fmt(r.bestDayMoney)} €</span></div>
+    <div class="stat-card"><span class="stat-label">Bester Tag (XP)</span><span class="stat-value xp">${r.bestDayXp.toLocaleString('de-DE')}</span></div>
+    <div class="stat-card"><span class="stat-label">Aktuelle Serie</span><span class="stat-value">${r.streak} ${r.streak === 1 ? 'Tag' : 'Tage'}</span></div>
+    <div class="stat-card"><span class="stat-label">Längste Serie</span><span class="stat-value">${r.longest} ${r.longest === 1 ? 'Tag' : 'Tage'}</span></div>
+    <div class="stat-card"><span class="stat-label">Schichten gesamt</span><span class="stat-value">${r.totalShifts}</span></div>
+  `;
+}
+
+/* ---------- Verlaufsdiagramm ---------- */
+let chartMetric = 'money';
+document.getElementById('chartTabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab'); if(!btn) return;
+  chartMetric = btn.dataset.metric;
+  document.querySelectorAll('#chartTabs .tab').forEach(t => t.classList.toggle('active', t === btn));
+  renderChart(chartMetric);
+});
+function renderChart(metric){
+  const svg = document.getElementById('chartSvg');
+  if(!svg) return;
+  const days = 14;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const data = [];
+  for(let i = days - 1; i >= 0; i--){
+    const d = new Date(today); d.setDate(d.getDate() - i);
+    const dateStr = toDateStr(d);
+    let val = 0;
+    log.forEach(e => {
+      if(e.date === dateStr) val += metric === 'money' ? (e.type === 'eur' ? e.value : 0) : (e.xp || 0);
+    });
+    data.push({ val, label: d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit'}) });
+  }
+  const max = Math.max(...data.map(d => d.val), 1);
+  const gap = 6;
+  const barWidth = (700 - (data.length - 1) * gap) / data.length;
+  const color = metric === 'money' ? 'var(--ok)' : 'var(--sonst)';
+  let bars = '';
+  data.forEach((d, i) => {
+    const h = d.val > 0 ? Math.max(3, (d.val / max) * 130) : 0;
+    const x = i * (barWidth + gap);
+    const y = 150 - h;
+    const valLabel = metric === 'money' ? fmt(d.val) + ' €' : d.val.toLocaleString('de-DE') + ' XP';
+    bars += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${h.toFixed(1)}" rx="3" fill="${color}"><title>${d.label}: ${valLabel}</title></rect>`;
+    bars += `<text x="${(x + barWidth/2).toFixed(1)}" y="168" text-anchor="middle" class="chart-axis-label">${d.label}</text>`;
+  });
+  svg.innerHTML = bars;
 }
 
 /* ---------- GitHub-artige Aktivitäts-Heatmap ---------- */
@@ -767,6 +942,55 @@ document.getElementById('addRobLogBtn').addEventListener('click', () => {
   if(total <= 0) return;
   log.push({ id: Date.now(), date: todayStr(), cat: 'kriminell', job: robTab === 'kasse' ? 'Kassenraub' : 'Juwelier/Bank', type: 'eur', value: total, xp: 0, detail: detail, duration: '—' });
   renderLog();
+});
+
+/* ---------- Backup: Export / Import ---------- */
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const data = {
+    log: log,
+    kasseTotal: kasseTotal,
+    groupMember: document.getElementById('groupMember').checked,
+    crimeBoss: document.getElementById('crimeBoss').checked,
+    goalMoney: document.getElementById('goalMoney').value,
+    goalXp: document.getElementById('goalXp').value,
+    exportedAt: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'einsatzlohn-backup-' + todayStr() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('importBtn').addEventListener('click', () => {
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try{
+      const data = JSON.parse(ev.target.result);
+      if(!confirm('Bestehende Daten werden durch die Backup-Datei ersetzt. Fortfahren?')) return;
+      if(Array.isArray(data.log)) log = data.log;
+      if(typeof data.kasseTotal === 'number') kasseTotal = data.kasseTotal;
+      if(typeof data.groupMember === 'boolean') document.getElementById('groupMember').checked = data.groupMember;
+      if(typeof data.crimeBoss === 'boolean') document.getElementById('crimeBoss').checked = data.crimeBoss;
+      if(data.goalMoney !== undefined) document.getElementById('goalMoney').value = data.goalMoney;
+      if(data.goalXp !== undefined) document.getElementById('goalXp').value = data.goalXp;
+      calcPassive(); updateRob(); renderLog();
+      alert('Backup erfolgreich importiert.');
+    }catch(err){
+      alert('Fehler beim Importieren: Datei ist kein gültiges Backup.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
 });
 
 loadState();
