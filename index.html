@@ -238,11 +238,6 @@
           </div>
         </div>
 
-        <div class="field full" style="margin-top:14px;">
-          <label>XP für diesen Raub (optional)</label>
-          <input type="number" id="robXp" value="0">
-        </div>
-
         <div class="passive-total">
           <span class="section-label" style="margin:0;">Raub-Summe</span>
           <span class="amount" id="robTotal">0,00 €</span>
@@ -269,25 +264,8 @@
           </div>
         </div>
 
-        <p class="section-label" style="margin-top:6px;">Nach Kategorie</p>
-        <div class="stat-row">
-          <div class="stat-card cat-feuerwehr">
-            <span class="stat-label">Feuerwehr XP</span>
-            <span class="stat-value" id="xpFeuerwehr">0</span>
-          </div>
-          <div class="stat-card cat-polizei">
-            <span class="stat-label">Polizei XP</span>
-            <span class="stat-value" id="xpPolizei">0</span>
-          </div>
-          <div class="stat-card cat-sonstige">
-            <span class="stat-label">Sonstige XP <span style="font-weight:400;">(LKW, Bus, ADAC)</span></span>
-            <span class="stat-value" id="xpSonstige">0</span>
-          </div>
-          <div class="stat-card cat-kriminell">
-            <span class="stat-label">Krimi Geld</span>
-            <span class="stat-value" id="moneyKriminell">0,00 €</span>
-          </div>
-        </div>
+        <p class="section-label" style="margin-top:6px;">Nach Stelle</p>
+        <div id="categoryBreakdown"></div>
 
         <p class="section-label" style="margin-top:22px;">Aktivität <span style="font-weight:400;">letzte 18 Wochen</span></p>
         <div class="heatmap-wrap">
@@ -309,24 +287,23 @@
           Mehr
         </div>
 
-        <p class="section-label" style="margin-top:22px;">Manuell eintragen</p>
+        <p class="section-label" style="margin-top:22px;">Schicht eintragen <span style="font-weight:400;">XP &amp; Geld, für jede Stelle</span></p>
         <div class="fields" style="margin-bottom:0;">
-          <div class="field">
-            <label>Kategorie</label>
-            <select id="manualCat">
-              <option value="feuerwehr">Feuerwehr</option>
-              <option value="polizei">Polizei</option>
-              <option value="sonstige">Sonstige (LKW/Bus/ADAC)</option>
-              <option value="kriminell">Krimi (Geld)</option>
-            </select>
+          <div class="field full">
+            <label>Stelle</label>
+            <select id="manualJob"></select>
           </div>
           <div class="field">
-            <label id="manualAmountLabel">XP</label>
+            <label>XP erhalten</label>
             <input type="number" id="manualXp" placeholder="z. B. 500">
           </div>
-          <div class="field full"><label>Notiz (optional)</label><input type="text" id="manualXpNote" placeholder="z. B. Tages-Bonus"></div>
+          <div class="field">
+            <label>Geld erhalten (€)</label>
+            <input type="number" id="manualMoney" placeholder="z. B. 15000">
+          </div>
+          <div class="field full"><label>Notiz (optional)</label><input type="text" id="manualXpNote" placeholder="z. B. Nachtschicht"></div>
         </div>
-        <button class="add-log-btn xp-btn" id="addManualXpBtn" type="button">+ Eintragen</button>
+        <button class="add-log-btn xp-btn" id="addManualXpBtn" type="button">+ Zur Schicht hinzufügen</button>
 
         <p class="section-label" style="margin-top:22px;">Protokoll <span id="logCount">0 Einträge</span></p>
         <div id="logEmpty" class="log-empty">Noch keine Einsätze erfasst.</div>
@@ -504,20 +481,20 @@ function renderLog(){
   list.innerHTML = '';
 
   let sumMoney = 0, sumXp = 0;
-  const catXp = { feuerwehr: 0, polizei: 0, sonstige: 0 };
-  let krimMoney = 0;
+  let feuerwehrXp = 0, polizeiXp = 0, krimMoney = 0;
+  const sonstigeXp = {};
+  CATS.sonstige.jobs.forEach(j => sonstigeXp[j.name] = 0);
   log.forEach(entry => {
     if(entry.type === 'eur') sumMoney += entry.value;
     sumXp += entry.xp || 0;
-    if(catXp.hasOwnProperty(entry.cat)) catXp[entry.cat] += entry.xp || 0;
-    if(entry.cat === 'kriminell' && entry.type === 'eur') krimMoney += entry.value;
+    if(entry.cat === 'feuerwehr') feuerwehrXp += entry.xp || 0;
+    else if(entry.cat === 'polizei') polizeiXp += entry.xp || 0;
+    else if(entry.cat === 'sonstige') sonstigeXp[entry.job] = (sonstigeXp[entry.job] || 0) + (entry.xp || 0);
+    else if(entry.cat === 'kriminell' && entry.type === 'eur') krimMoney += entry.value;
   });
   document.getElementById('totalXpStat').textContent = sumXp.toLocaleString('de-DE');
   document.getElementById('totalMoneyStat').textContent = fmt(sumMoney) + ' €';
-  document.getElementById('xpFeuerwehr').textContent = catXp.feuerwehr.toLocaleString('de-DE');
-  document.getElementById('xpPolizei').textContent = catXp.polizei.toLocaleString('de-DE');
-  document.getElementById('xpSonstige').textContent = catXp.sonstige.toLocaleString('de-DE');
-  document.getElementById('moneyKriminell').textContent = fmt(krimMoney) + ' €';
+  renderCategoryBreakdown(feuerwehrXp, polizeiXp, sonstigeXp, krimMoney);
 
   renderHeatmap();
   saveState();
@@ -553,6 +530,20 @@ function renderLog(){
 }
 
 /* ---------- GitHub-artige Aktivitäts-Heatmap ---------- */
+function renderCategoryBreakdown(feuerwehrXp, polizeiXp, sonstigeXp, krimMoney){
+  const c = document.getElementById('categoryBreakdown');
+  if(!c) return;
+  let html = '<div class="stat-row">';
+  html += `<div class="stat-card cat-feuerwehr"><span class="stat-label">Feuerwehr</span><span class="stat-value">${feuerwehrXp.toLocaleString('de-DE')} XP</span></div>`;
+  html += `<div class="stat-card cat-polizei"><span class="stat-label">Polizei</span><span class="stat-value">${polizeiXp.toLocaleString('de-DE')} XP</span></div>`;
+  CATS.sonstige.jobs.forEach(j => {
+    html += `<div class="stat-card cat-sonstige"><span class="stat-label">${j.name}</span><span class="stat-value">${(sonstigeXp[j.name]||0).toLocaleString('de-DE')} XP</span></div>`;
+  });
+  html += `<div class="stat-card cat-kriminell"><span class="stat-label">Kriminell</span><span class="stat-value">${fmt(krimMoney)} €</span></div>`;
+  html += '</div>';
+  c.innerHTML = html;
+}
+
 function toDateStr(d){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
@@ -634,22 +625,37 @@ document.getElementById('addLogBtn').addEventListener('click', () => {
   renderLog();
 });
 
-document.getElementById('manualCat').addEventListener('change', () => {
-  const cat = document.getElementById('manualCat').value;
-  document.getElementById('manualAmountLabel').textContent = cat === 'kriminell' ? 'Geld (€)' : 'XP';
-});
+function populateManualJobSelect(){
+  const sel = document.getElementById('manualJob');
+  if(!sel) return;
+  let html = '';
+  html += '<optgroup label="Feuerwehr">';
+  html += '<option value="feuerwehr::Feuerwehr">Feuerwehr</option>';
+  html += '</optgroup>';
+  html += '<optgroup label="Polizei">';
+  html += '<option value="polizei::Polizei">Polizei</option>';
+  html += '</optgroup>';
+  html += '<optgroup label="Sonstige">';
+  CATS.sonstige.jobs.forEach(j => { html += `<option value="sonstige::${j.name}">${j.name}</option>`; });
+  html += '</optgroup>';
+  html += '<optgroup label="Kriminell">';
+  html += '<option value="kriminell::Kriminell">Kriminell</option>';
+  html += '</optgroup>';
+  sel.innerHTML = html;
+}
+populateManualJobSelect();
 
 document.getElementById('addManualXpBtn').addEventListener('click', () => {
-  const cat = document.getElementById('manualCat').value;
-  const amount = parseInt(document.getElementById('manualXp').value) || 0;
-  if(amount <= 0) return;
+  const [cat, job] = document.getElementById('manualJob').value.split('::');
+  const xpVal = parseInt(document.getElementById('manualXp').value) || 0;
+  const moneyVal = parseFloat(document.getElementById('manualMoney').value) || 0;
+  if(xpVal <= 0 && moneyVal <= 0) return;
   const note = document.getElementById('manualXpNote').value.trim();
-  if(cat === 'kriminell'){
-    log.push({ id: Date.now(), date: todayStr(), cat: 'kriminell', job: 'Manueller Eintrag', type: 'eur', value: amount, xp: 0, detail: note || 'Manueller Eintrag', duration: '—' });
-  } else {
-    log.push({ id: Date.now(), date: todayStr(), cat: cat, job: 'Manueller Eintrag', type: 'xp', value: amount, xp: amount, detail: note || 'Manueller Eintrag', duration: '—' });
-  }
+  const type = moneyVal > 0 ? 'eur' : 'xp';
+  const value = moneyVal > 0 ? moneyVal : xpVal;
+  log.push({ id: Date.now(), date: todayStr(), cat: cat, job: job, type: type, value: value, xp: xpVal, detail: note || 'Schicht-Eintrag', duration: '—' });
   document.getElementById('manualXp').value = '';
+  document.getElementById('manualMoney').value = '';
   document.getElementById('manualXpNote').value = '';
   renderLog();
 });
@@ -740,7 +746,6 @@ function updateRob(){
 
 document.getElementById('addRobLogBtn').addEventListener('click', () => {
   let total = 0, detail = '';
-  const robXp = parseInt(document.getElementById('robXp').value) || 0;
   if(robTab === 'kasse'){
     total = kasseTotal;
     detail = 'Kassenraub';
@@ -759,8 +764,8 @@ document.getElementById('addRobLogBtn').addEventListener('click', () => {
     if(diamonds) parts.push(diamonds + '× Diamanten');
     detail = parts.join(', ') || 'Juwelier/Bank';
   }
-  if(total <= 0 && robXp <= 0) return;
-  log.push({ id: Date.now(), date: todayStr(), cat: 'kriminell', job: robTab === 'kasse' ? 'Kassenraub' : 'Juwelier/Bank', type: 'eur', value: total, xp: robXp, detail: detail, duration: '—' });
+  if(total <= 0) return;
+  log.push({ id: Date.now(), date: todayStr(), cat: 'kriminell', job: robTab === 'kasse' ? 'Kassenraub' : 'Juwelier/Bank', type: 'eur', value: total, xp: 0, detail: detail, duration: '—' });
   renderLog();
 });
 
