@@ -26,6 +26,8 @@
   .nav-btn.active .dot{ background:var(--accent); }
   .view{ display:none; }
   .view.active{ display:block; }
+  .subview{ display:none; }
+  .subview.active{ display:block; }
 
   .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:28px; align-items:start; }
   .single{ max-width:640px; margin:0 auto; }
@@ -270,101 +272,116 @@
       <div class="panel">
         <p class="panel-title">XP-Tracker <span style="font-weight:400;font-size:14px;color:var(--muted);">Gesamtfortschritt</span></p>
 
-        <div class="stat-row">
-          <div class="stat-card">
-            <span class="stat-label">Gesamt-XP</span>
-            <span class="stat-value xp" id="totalXpStat">0</span>
-          </div>
-          <div class="stat-card">
-            <span class="stat-label">Gesamt-Geld</span>
-            <span class="stat-value" id="totalMoneyStat">0,00 €</span>
-          </div>
+        <div class="tabs" id="trackerTabs">
+          <button class="tab active" data-sub="overview">Übersicht</button>
+          <button class="tab" data-sub="activity">Aktivität</button>
+          <button class="tab" data-sub="add">Eintragen</button>
+          <button class="tab" data-sub="log">Protokoll</button>
         </div>
 
-        <p class="section-label" style="margin-top:22px;">Wochenziel <span style="font-weight:400;">Mo–So, aktuelle Woche</span></p>
-        <div class="goal-block">
-          <div class="goal-row">
-            <label style="margin:0;white-space:nowrap;">Ziel Geld (€)</label>
-            <input type="number" id="goalMoney" placeholder="z. B. 100000">
-          </div>
-          <div class="progress-track"><div class="progress-fill" id="goalMoneyBarFill" style="width:0%;"></div></div>
-          <div class="progress-text"><span id="goalMoneyText">0 € / — €</span></div>
-        </div>
-        <div class="goal-block" style="margin-bottom:0;">
-          <div class="goal-row">
-            <label style="margin:0;white-space:nowrap;">Ziel XP</label>
-            <input type="number" id="goalXp" placeholder="z. B. 5000">
-          </div>
-          <div class="progress-track"><div class="progress-fill xp-fill" id="goalXpBarFill" style="width:0%;"></div></div>
-          <div class="progress-text"><span id="goalXpText">0 XP / — XP</span></div>
-        </div>
-
-        <p class="section-label" style="margin-top:22px;">Nach Stelle</p>
-        <div id="categoryBreakdown"></div>
-
-        <p class="section-label" style="margin-top:22px;">Rekorde</p>
-        <div class="stat-row" id="recordsGrid"></div>
-
-        <p class="section-label" style="margin-top:22px;">Aktivität <span style="font-weight:400;">letzte 18 Wochen</span></p>
-        <div class="heatmap-wrap">
-          <div class="heatmap-inner">
-            <div class="heatmap-months" id="heatmapMonths"></div>
-            <div class="heatmap-body">
-              <div class="heatmap-daylabels"><span></span><span>Mo</span><span></span><span>Mi</span><span></span><span>Fr</span><span></span></div>
-              <div class="heatmap-weeks" id="heatmapWeeks"></div>
+        <div class="subview active" id="sub-overview">
+          <div class="stat-row">
+            <div class="stat-card">
+              <span class="stat-label">Gesamt-XP</span>
+              <span class="stat-value xp" id="totalXpStat">0</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-label">Gesamt-Geld</span>
+              <span class="stat-value" id="totalMoneyStat">0,00 €</span>
             </div>
           </div>
-        </div>
-        <div class="heatmap-legend">
-          Weniger
-          <span class="heatmap-cell" data-level="0"></span>
-          <span class="heatmap-cell" data-level="1"></span>
-          <span class="heatmap-cell" data-level="2"></span>
-          <span class="heatmap-cell" data-level="3"></span>
-          <span class="heatmap-cell" data-level="4"></span>
-          Mehr
-        </div>
 
-        <p class="section-label" style="margin-top:22px;">Verlauf <span style="font-weight:400;">letzte 14 Tage</span></p>
-        <div class="tabs" id="chartTabs" style="margin-bottom:14px;">
-          <button class="tab active" data-metric="money">Geld</button>
-          <button class="tab" data-metric="xp">XP</button>
-        </div>
-        <div class="chart-svg-wrap">
-          <svg id="chartSvg" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg"></svg>
-        </div>
-
-        <p class="section-label" style="margin-top:22px;">Schicht eintragen <span style="font-weight:400;">XP &amp; Geld, für jede Stelle</span></p>
-        <div class="fields" style="margin-bottom:0;">
-          <div class="field full">
-            <label>Stelle</label>
-            <select id="manualJob"></select>
+          <p class="section-label" style="margin-top:22px;">Wochenziel <span style="font-weight:400;">Mo–So, aktuelle Woche</span></p>
+          <div class="goal-block">
+            <div class="goal-row">
+              <label style="margin:0;white-space:nowrap;">Ziel Geld (€)</label>
+              <input type="number" id="goalMoney" placeholder="z. B. 100000">
+            </div>
+            <div class="progress-track"><div class="progress-fill" id="goalMoneyBarFill" style="width:0%;"></div></div>
+            <div class="progress-text"><span id="goalMoneyText">0 € / — €</span></div>
           </div>
-          <div class="field">
-            <label>XP erhalten</label>
-            <input type="number" id="manualXp" placeholder="z. B. 500">
+          <div class="goal-block" style="margin-bottom:0;">
+            <div class="goal-row">
+              <label style="margin:0;white-space:nowrap;">Ziel XP</label>
+              <input type="number" id="goalXp" placeholder="z. B. 5000">
+            </div>
+            <div class="progress-track"><div class="progress-fill xp-fill" id="goalXpBarFill" style="width:0%;"></div></div>
+            <div class="progress-text"><span id="goalXpText">0 XP / — XP</span></div>
           </div>
-          <div class="field">
-            <label>Geld erhalten (€)</label>
-            <input type="number" id="manualMoney" placeholder="z. B. 15000">
-          </div>
-          <div class="field full"><label>Notiz (optional)</label><input type="text" id="manualXpNote" placeholder="z. B. Nachtschicht"></div>
-        </div>
-        <button class="add-log-btn xp-btn" id="addManualXpBtn" type="button">+ Zur Schicht hinzufügen</button>
 
-        <p class="section-label" style="margin-top:22px;">Backup <span style="font-weight:400;">lokale Datei, kein Server</span></p>
-        <div class="export-row">
-          <button class="mini-btn" id="exportBtn" type="button">Backup exportieren</button>
-          <button class="mini-btn" id="importBtn" type="button">Backup importieren</button>
-          <input type="file" id="importFile" accept="application/json" style="display:none;">
+          <p class="section-label" style="margin-top:22px;">Nach Stelle</p>
+          <div id="categoryBreakdown"></div>
+
+          <p class="section-label" style="margin-top:22px;">Rekorde</p>
+          <div class="stat-row" id="recordsGrid"></div>
         </div>
 
-        <p class="section-label" style="margin-top:22px;">Protokoll <span id="logCount">0 Einträge</span></p>
-        <div id="logEmpty" class="log-empty">Noch keine Einsätze erfasst.</div>
-        <div id="logList" class="log-list"></div>
-        <div class="log-actions" id="logActions" style="display:none;">
-          <button class="mini-btn" id="copyLogBtn" type="button">Protokoll kopieren</button>
-          <button class="mini-btn" id="clearLogBtn" type="button">Alles löschen</button>
+        <div class="subview" id="sub-activity">
+          <p class="section-label">Aktivität <span style="font-weight:400;">letzte 18 Wochen</span></p>
+          <div class="heatmap-wrap">
+            <div class="heatmap-inner">
+              <div class="heatmap-months" id="heatmapMonths"></div>
+              <div class="heatmap-body">
+                <div class="heatmap-daylabels"><span></span><span>Mo</span><span></span><span>Mi</span><span></span><span>Fr</span><span></span></div>
+                <div class="heatmap-weeks" id="heatmapWeeks"></div>
+              </div>
+            </div>
+          </div>
+          <div class="heatmap-legend">
+            Weniger
+            <span class="heatmap-cell" data-level="0"></span>
+            <span class="heatmap-cell" data-level="1"></span>
+            <span class="heatmap-cell" data-level="2"></span>
+            <span class="heatmap-cell" data-level="3"></span>
+            <span class="heatmap-cell" data-level="4"></span>
+            Mehr
+          </div>
+
+          <p class="section-label" style="margin-top:26px;">Verlauf <span style="font-weight:400;">letzte 14 Tage</span></p>
+          <div class="tabs" id="chartTabs" style="margin-bottom:14px;">
+            <button class="tab active" data-metric="money">Geld</button>
+            <button class="tab" data-metric="xp">XP</button>
+          </div>
+          <div class="chart-svg-wrap">
+            <svg id="chartSvg" viewBox="0 0 700 180" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+        </div>
+
+        <div class="subview" id="sub-add">
+          <p class="section-label">Schicht eintragen <span style="font-weight:400;">XP &amp; Geld, für jede Stelle</span></p>
+          <div class="fields" style="margin-bottom:0;">
+            <div class="field full">
+              <label>Stelle</label>
+              <select id="manualJob"></select>
+            </div>
+            <div class="field">
+              <label>XP erhalten</label>
+              <input type="number" id="manualXp" placeholder="z. B. 500">
+            </div>
+            <div class="field">
+              <label>Geld erhalten (€)</label>
+              <input type="number" id="manualMoney" placeholder="z. B. 15000">
+            </div>
+            <div class="field full"><label>Notiz (optional)</label><input type="text" id="manualXpNote" placeholder="z. B. Nachtschicht"></div>
+          </div>
+          <button class="add-log-btn xp-btn" id="addManualXpBtn" type="button">+ Zur Schicht hinzufügen</button>
+        </div>
+
+        <div class="subview" id="sub-log">
+          <p class="section-label">Backup <span style="font-weight:400;">lokale Datei, kein Server</span></p>
+          <div class="export-row">
+            <button class="mini-btn" id="exportBtn" type="button">Backup exportieren</button>
+            <button class="mini-btn" id="importBtn" type="button">Backup importieren</button>
+            <input type="file" id="importFile" accept="application/json" style="display:none;">
+          </div>
+
+          <p class="section-label" style="margin-top:26px;">Protokoll <span id="logCount">0 Einträge</span></p>
+          <div id="logEmpty" class="log-empty">Noch keine Einsätze erfasst.</div>
+          <div id="logList" class="log-list"></div>
+          <div class="log-actions" id="logActions" style="display:none;">
+            <button class="mini-btn" id="copyLogBtn" type="button">Protokoll kopieren</button>
+            <button class="mini-btn" id="clearLogBtn" type="button">Alles löschen</button>
+          </div>
         </div>
       </div>
     </div>
@@ -418,6 +435,13 @@ document.getElementById('mainNav').addEventListener('click', (e) => {
   const target = btn.dataset.view;
   document.querySelectorAll('#mainNav .nav-btn').forEach(b => b.classList.toggle('active', b === btn));
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + target));
+});
+
+document.getElementById('trackerTabs').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tab'); if(!btn) return;
+  const target = btn.dataset.sub;
+  document.querySelectorAll('#trackerTabs .tab').forEach(t => t.classList.toggle('active', t === btn));
+  document.querySelectorAll('.subview').forEach(v => v.classList.toggle('active', v.id === 'sub-' + target));
 });
 
 function fmt(n) { return n.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
