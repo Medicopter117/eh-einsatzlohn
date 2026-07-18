@@ -4,26 +4,118 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Einsatzlohn // Schichtabrechner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg: #0b0f14; --panel: #131922; --panel-2: #0f141b; --line: #232c38; --text: #eef2f6; --muted: #7c8896; --fw: #e8583a; --pol: #3d7bf2; --sonst: #f2b705; --ok: #3ddc84; --bad: #e8583a; --accent: var(--pol); }
+  :root{
+    --bg: #0a0c10;
+    --bg-2: #05060a;
+    --panel: #12161d;
+    --panel-2: #0d1116;
+    --line: #1f262f;
+    --line-2: #2b3341;
+    --text: #edf1f5;
+    --muted: #7d8894;
+    --muted-2: #4d5560;
+    --fw: #ff5a3c;
+    --pol: #3d7bf2;
+    --sonst: #ffb020;
+    --krim: #a855f7;
+    --ok: #34d399;
+    --bad: #ef4444;
+    --accent: var(--pol);
+    --font-display: 'Oswald', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius: 10px;
+  }
   *{box-sizing:border-box;} html,body{margin:0;padding:0;}
-  body{ background: var(--bg); color:var(--text); font-family: sans-serif; min-height:100vh; padding:32px 24px 80px; }
+  body{
+    background:
+      radial-gradient(1100px 500px at 12% -10%, rgba(61,123,242,.08), transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, rgba(255,90,60,.06), transparent 55%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 34px),
+      repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 34px),
+      var(--bg);
+    color:var(--text);
+    font-family: var(--font-body);
+    min-height:100vh;
+    padding:32px 24px 80px;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background: var(--pol); color:#fff; }
+  ::-webkit-scrollbar{ width:8px; height:8px; }
+  ::-webkit-scrollbar-track{ background:var(--panel-2); }
+  ::-webkit-scrollbar-thumb{ background:var(--line-2); border-radius:8px; }
+  :focus-visible{ outline:2px solid var(--pol); outline-offset:2px; }
+
   .wrap{max-width:1280px;margin:0 auto;}
-  header{ display:flex;align-items:flex-end;justify-content:space-between; gap:16px;flex-wrap:wrap; border-bottom:1px solid var(--line); padding-bottom:22px;margin-bottom:8px; }
-  h1{ font-weight:700; font-size:44px; margin:0;line-height:1; text-transform:uppercase; }
+
+  header{
+    position:relative;
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+    padding-bottom:24px;margin-bottom:8px;
+  }
+  h1{
+    font-family:var(--font-display);
+    font-weight:700; font-size:42px; margin:0;line-height:1;
+    text-transform:uppercase; letter-spacing:.01em;
+  }
+  h1::before{
+    content:'Schicht-Auszahlung · Dienstprotokoll';
+    display:block;
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:10px;
+    font-weight:500;
+  }
   h1 span{color:var(--accent);}
-  .clock-box{ display:flex; align-items:center; gap:12px; }
-  #durationClock{ font-variant-numeric: tabular-nums; }
-  #durationDisplay{ font-size:20px; }
-  .clock-btn{ background:var(--panel-2); border:1px solid var(--line); color:var(--text); font-size:12px; font-weight:600; padding:9px 14px; border-radius:6px; cursor:pointer; letter-spacing:.04em; text-transform:uppercase; }
+  .clock-box{ display:flex; align-items:center; gap:10px; }
+  #durationClock{
+    font-family:var(--font-mono);
+    background:var(--bg-2);
+    border:1px solid var(--line-2);
+    border-radius:7px;
+    padding:9px 16px;
+    display:flex; align-items:baseline; gap:8px;
+    color:var(--muted);
+    font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+  }
+  #durationDisplay{
+    font-size:20px; font-weight:700; color:var(--sonst);
+    letter-spacing:.04em; text-shadow:0 0 10px rgba(255,176,32,.35);
+  }
+  .clock-btn{
+    font-family:var(--font-display);
+    background:var(--panel-2); border:1px solid var(--line); color:var(--text);
+    font-size:11px; font-weight:600; padding:11px 16px; border-radius:7px; cursor:pointer;
+    letter-spacing:.08em; text-transform:uppercase;
+    transition:border-color .15s, color .15s;
+  }
+  .clock-btn:hover{ border-color:var(--line-2); }
   .clock-btn.start{border-color:var(--ok); color:var(--ok);}
   .clock-btn.stop{border-color:var(--bad); color:var(--bad);}
 
-  .nav{ display:flex; gap:10px; margin:26px 0 32px; flex-wrap:wrap; }
-  .nav-btn{ display:flex; align-items:center; gap:9px; font-weight:700; font-size:14px; letter-spacing:.02em; background:var(--panel); border:1px solid var(--line); color:var(--muted); padding:14px 20px; border-radius:9px; cursor:pointer; }
-  .nav-btn .dot{ width:8px;height:8px;border-radius:50%;background:var(--muted); }
-  .nav-btn.active{ border-color:var(--accent); color:var(--text); background:var(--panel-2); }
-  .nav-btn.active .dot{ background:var(--accent); }
+  .nav{ display:flex; gap:8px; margin:28px 0 32px; flex-wrap:wrap; }
+  .nav-btn{
+    display:flex; align-items:center; gap:9px;
+    font-family:var(--font-display); font-weight:600; font-size:13px; letter-spacing:.07em; text-transform:uppercase;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--muted);
+    padding:14px 20px 13px;
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+    cursor:pointer;
+    transition:color .15s, background .15s, border-color .15s;
+  }
+  .nav-btn:hover{ color:var(--text); }
+  .nav-btn .dot{ width:7px;height:7px;border-radius:50%;background:var(--muted-2); }
+  .nav-btn.active{ border-color:var(--accent); color:var(--text); background:var(--panel); box-shadow: inset 0 2px 0 var(--accent); }
+  .nav-btn.active .dot{ background:var(--accent); box-shadow:0 0 8px var(--accent); }
   .view{ display:none; }
   .view.active{ display:block; }
   .subview{ display:none; }
@@ -31,30 +123,69 @@
 
   .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:28px; align-items:start; }
   .single{ max-width:640px; margin:0 auto; }
-  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:28px; }
+  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:28px; }
   .panel + .panel{margin-top:28px;}
-  .panel-title{ font-size:20px; font-weight:700; margin:0 0 22px; padding-bottom:16px; border-bottom:1px solid var(--line); }
-  .section-label{ font-size:11px;letter-spacing:.14em;text-transform:uppercase; color:var(--muted);margin:0 0 14px; display:flex;align-items:center;justify-content:space-between;gap:8px; }
-  .tabs{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap;}
-  .tab{ font-weight:600;font-size:14px; background:var(--panel-2); border:1px solid var(--line); color:var(--muted); padding:12px 18px;border-radius:8px;cursor:pointer; }
+  .panel-title{
+    font-family:var(--font-display); font-weight:600; font-size:19px; text-transform:uppercase; letter-spacing:.02em;
+    margin:0 0 22px; padding-bottom:16px; border-bottom:1px solid var(--line);
+  }
+  .section-label{
+    font-family:var(--font-display); font-weight:500;
+    font-size:11px;letter-spacing:.16em;text-transform:uppercase; color:var(--muted);
+    margin:0 0 14px; display:flex;align-items:center;justify-content:space-between;gap:8px;
+  }
+  .tabs{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+  .tab{
+    font-family:var(--font-display); font-weight:600;font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--muted);
+    padding:12px 18px;border-radius:7px;cursor:pointer;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .tab:hover{ color:var(--text); }
   .tab.active{border-color:var(--accent); color:var(--text); background:var(--line);}
-  .jobs{ display:grid;grid-template-columns:repeat(2, 1fr);gap:12px;margin-bottom:28px; }
-  .job-btn{ display:flex;align-items:center;justify-content:space-between;gap:10px; background:var(--panel-2); border:1px solid var(--line); border-radius:9px; padding:16px 16px; cursor:pointer; color:var(--text); }
+  .jobs{ display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:28px; }
+  .job-btn{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:15px 16px; cursor:pointer; color:var(--text);
+    font-size:14px;
+    transition:border-color .15s, background .15s;
+  }
+  .job-btn span:last-child{ font-family:var(--font-mono); color:var(--muted); font-size:12px; }
   .job-btn.selected{border-color:var(--accent);background:var(--line);}
-  .fields{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+  .job-btn.selected span:last-child{ color:var(--accent); }
+  .fields{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
   .field{display:flex;flex-direction:column;gap:8px;}
   .field.full{grid-column:1 / -1;}
-  label{font-size:13px;color:var(--muted);}
-  input, select{ background:var(--panel-2); border:1px solid var(--line); color:var(--text); font-size:16px; padding:13px 14px; border-radius:8px; width:100%; }
+  label{
+    font-family:var(--font-body); font-weight:600; font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+  }
+  input, select{
+    font-family:var(--font-mono);
+    background:var(--panel-2); border:1px solid var(--line); color:var(--text);
+    font-size:15px; padding:12px 14px; border-radius:7px; width:100%;
+  }
+  input:focus, select:focus{ border-color:var(--pol); }
   .duration-row{display:flex;gap:10px;align-items:center;}
   .duration-row input{flex:1;}
-  .mini-btn{ background:var(--panel-2); border:1px solid var(--line); color:var(--muted); font-size:12px; font-weight:600; padding:13px 14px; border-radius:8px; cursor:pointer; white-space:nowrap; }
+  .mini-btn{
+    font-family:var(--font-display);
+    background:var(--panel-2); border:1px solid var(--line); color:var(--muted);
+    font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase;
+    padding:13px 14px; border-radius:7px; cursor:pointer; white-space:nowrap;
+    transition:color .15s, border-color .15s;
+  }
   .mini-btn:hover{color:var(--text);border-color:var(--accent);}
-  .check-row{ display:flex; align-items:center; gap:10px; background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:11px 12px; cursor:pointer; user-select:none; }
+  .check-row{
+    display:flex; align-items:center; gap:10px; background:var(--panel-2); border:1px solid var(--line); border-radius:7px;
+    padding:12px 12px; cursor:pointer; user-select:none; font-size:13px;
+  }
   .check-row input{ width:auto; accent-color:var(--bad); }
-  .check-row.danger:has(input:checked){ border-color:var(--bad); }
-  .switch-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:11px 12px; }
-  .switch-row label{font-size:14px;}
+  .check-row.danger:has(input:checked){ border-color:var(--bad); background:rgba(239,68,68,.06); }
+  .switch-row{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--panel-2); border:1px solid var(--line); border-radius:7px; padding:12px 12px;
+  }
+  .switch-row label{font-size:13px;text-transform:none;letter-spacing:0;font-weight:500;color:var(--text);}
   .switch{ position:relative; width:42px; height:24px; flex-shrink:0; }
   .switch input{ opacity:0; width:0; height:0; }
   .switch .slider{ position:absolute; inset:0; background:var(--line); border-radius:999px; cursor:pointer; transition:.15s; }
@@ -63,75 +194,122 @@
   .switch input:checked + .slider::before{ transform:translateX(18px); background:var(--ok); }
   .passive-total{ display:flex; justify-content:space-between; align-items:baseline; margin-top:14px; padding-top:14px; border-top:1px solid var(--line); }
   .passive-total .amount{font-size:24px;}
-  .ticket{ background:var(--panel-2); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
-  .ticket-stripe{ height:7px; background:var(--accent); }
-  .ticket-body{padding:22px 22px 6px;}
-  .ticket-row{ display:flex;justify-content:space-between; padding:7px 0; color:var(--muted); border-bottom:1px dashed var(--line); }
-  .ticket-row b{color:var(--text);}
-  .ticket-total{ padding:18px 22px 22px; }
-  .amount{ font-weight:700; font-size:32px; color:var(--ok); }
-  .formula{ font-size:12px; color:var(--muted); margin-top:8px; font-family: monospace; background: var(--bg); padding: 8px; border-radius: 4px; }
-  .add-log-btn{ margin-top:14px; width:100%; background:var(--accent); border:none; color:#fff; font-weight:700; font-size:14px; padding:12px; border-radius:7px; cursor:pointer; letter-spacing:.03em; text-transform:uppercase; }
-  .add-log-btn:hover{ filter:brightness(1.1); }
-  .add-log-btn.xp-btn{ background:var(--sonst); }
-  .log-empty{ color:var(--muted); font-size:13px; padding:10px 0; }
+
+  .ticket{ background:var(--panel-2); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; position:relative; }
+  .ticket-stripe{ height:8px; position:relative; }
+  .ticket-stripe::after{
+    content:''; position:absolute; inset:0;
+    background-image:repeating-linear-gradient(135deg, rgba(0,0,0,.2) 0 7px, transparent 7px 14px);
+  }
+  .ticket-stripe::before{
+    content:''; position:absolute; left:0; right:0; bottom:-4px; height:8px; z-index:2;
+    background-image:radial-gradient(circle 3px, var(--panel-2) 3px, transparent 3.6px);
+    background-size:15px 8px; background-repeat:repeat-x; background-position:6px 0;
+  }
+  .ticket-body{padding:24px 22px 8px;}
+  .ticket-row{
+    display:flex;justify-content:space-between; padding:8px 0; color:var(--muted);
+    border-bottom:1px dashed var(--line); font-family:var(--font-mono); font-size:13px;
+  }
+  .ticket-row b{color:var(--text); font-weight:600;}
+  .ticket-total{ padding:18px 22px 22px; position:relative; }
+  .ticket-total::before{
+    content:'GEPRÜFT'; position:absolute; top:14px; right:18px;
+    font-family:var(--font-display); font-weight:700; font-size:28px; letter-spacing:.1em;
+    color:var(--ok); opacity:.09; transform:rotate(-13deg); text-transform:uppercase; pointer-events:none;
+  }
+  .amount{ font-family:var(--font-mono); font-weight:700; font-size:32px; color:var(--ok); position:relative; }
+  .formula{
+    font-size:11.5px; color:var(--muted); margin-top:10px; font-family: var(--font-mono);
+    background: var(--bg-2); padding: 10px 12px; border-radius: 6px; border:1px solid var(--line);
+    line-height:1.5;
+  }
+  .add-log-btn{
+    margin-top:16px; width:100%; background:var(--accent); border:none; color:#fff;
+    font-family:var(--font-display); font-weight:600; font-size:13px; padding:13px; border-radius:7px; cursor:pointer;
+    letter-spacing:.08em; text-transform:uppercase; transition:filter .15s, transform .1s;
+  }
+  .add-log-btn:hover{ filter:brightness(1.12); }
+  .add-log-btn:active{ transform:scale(.99); }
+  .add-log-btn.xp-btn{ background:var(--sonst); color:#1a1200; }
+  .log-empty{ color:var(--muted); font-size:13px; padding:10px 0; font-family:var(--font-mono); }
   .log-list{ display:flex; flex-direction:column; gap:8px; max-height:260px; overflow-y:auto; }
-  .log-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--panel-2); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:6px; padding:10px 12px; }
+  .log-item{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--panel-2); border:1px solid var(--line); border-left:3px solid var(--accent); border-radius:6px; padding:10px 12px;
+  }
   .log-item .li-main{display:flex;flex-direction:column;gap:2px;}
   .log-item .li-job{font-size:13px;font-weight:600;}
-  .log-item .li-meta{font-size:11px;color:var(--muted);}
-  .log-item .li-amount{font-weight:700;color:var(--ok);font-size:14px;}
+  .log-item .li-meta{font-size:10.5px;color:var(--muted);font-family:var(--font-mono);}
+  .log-item .li-amount{font-family:var(--font-mono);font-weight:700;color:var(--ok);font-size:13px;}
   .log-item .li-amount.xp-amount{color:var(--sonst);}
   .log-item .li-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;line-height:1;padding:2px 6px;}
   .log-item .li-del:hover{color:var(--bad);}
   .log-total{ display:flex;justify-content:space-between;align-items:baseline; margin-top:14px;padding-top:14px;border-top:1px solid var(--line); }
   .log-total .amount{font-size:24px;}
   .stat-row{ display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
-  .stat-card{ flex:1 1 140px; background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:14px; display:flex; flex-direction:column; gap:4px; }
-  .stat-label{ font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
-  .stat-value{ font-size:26px; font-weight:700; color:var(--ok); font-variant-numeric: tabular-nums; }
+  .stat-card{
+    flex:1 1 140px; background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:14px;
+    display:flex; flex-direction:column; gap:5px;
+  }
+  .stat-label{ font-family:var(--font-display); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); }
+  .stat-value{ font-family:var(--font-mono); font-size:24px; font-weight:700; color:var(--ok); font-variant-numeric: tabular-nums; }
   .stat-value.xp{ color:var(--sonst); }
   .stat-card.cat-feuerwehr .stat-value{ color:var(--fw); }
   .stat-card.cat-polizei .stat-value{ color:var(--pol); }
   .stat-card.cat-sonstige .stat-value{ color:var(--sonst); }
-  .stat-card.cat-kriminell .stat-value{ color:#8b5cf6; }
+  .stat-card.cat-kriminell .stat-value{ color:var(--krim); }
   .log-actions{display:flex;gap:8px;margin-top:14px;}
   .log-actions .mini-btn{flex:1;text-align:center;}
 
   .heatmap-wrap{ overflow-x:auto; padding-bottom:6px; }
   .heatmap-inner{ display:inline-flex; flex-direction:column; gap:6px; min-width:100%; }
   .heatmap-months{ display:flex; gap:3px; padding-left:26px; }
-  .heatmap-month-label{ font-size:11px; color:var(--muted); }
+  .heatmap-month-label{ font-size:10.5px; color:var(--muted); font-family:var(--font-mono); }
   .heatmap-body{ display:flex; gap:3px; }
   .heatmap-daylabels{ display:flex; flex-direction:column; gap:3px; width:22px; }
-  .heatmap-daylabels span{ font-size:10px; color:var(--muted); height:12px; line-height:12px; }
+  .heatmap-daylabels span{ font-size:9.5px; color:var(--muted); height:12px; line-height:12px; font-family:var(--font-mono); }
   .heatmap-weeks{ display:flex; gap:3px; }
   .heatmap-week{ display:flex; flex-direction:column; gap:3px; }
   .heatmap-cell{ width:12px; height:12px; border-radius:3px; background:var(--panel-2); border:1px solid var(--line); }
-  .heatmap-cell[data-level="1"]{ background:#1a5c34; border-color:#1a5c34; }
-  .heatmap-cell[data-level="2"]{ background:#22884a; border-color:#22884a; }
-  .heatmap-cell[data-level="3"]{ background:#2cb562; border-color:#2cb562; }
+  .heatmap-cell[data-level="1"]{ background:#123d29; border-color:#123d29; }
+  .heatmap-cell[data-level="2"]{ background:#186b3f; border-color:#186b3f; }
+  .heatmap-cell[data-level="3"]{ background:#1f9c56; border-color:#1f9c56; }
   .heatmap-cell[data-level="4"]{ background:var(--ok); border-color:var(--ok); }
-  .heatmap-legend{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); margin-top:10px; justify-content:flex-end; }
+  .heatmap-legend{ display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); margin-top:10px; justify-content:flex-end; font-family:var(--font-mono); }
   .heatmap-legend .heatmap-cell{ width:11px; height:11px; }
 
   .goal-block{ margin-bottom:18px; }
   .goal-row{ display:flex; align-items:center; gap:12px; margin-bottom:10px; }
   .goal-row input{ max-width:150px; }
-  .progress-track{ background:var(--panel-2); border:1px solid var(--line); border-radius:999px; height:16px; overflow:hidden; margin:8px 0; }
+  .progress-track{ background:var(--panel-2); border:1px solid var(--line); border-radius:999px; height:14px; overflow:hidden; margin:8px 0; }
   .progress-fill{ height:100%; background:var(--ok); border-radius:999px; transition:width .3s; }
   .progress-fill.xp-fill{ background:var(--sonst); }
-  .progress-text{ font-size:12px; color:var(--muted); display:flex; justify-content:space-between; }
+  .progress-text{ font-size:11.5px; color:var(--muted); display:flex; justify-content:space-between; font-family:var(--font-mono); }
 
   .chart-svg-wrap{ width:100%; overflow-x:auto; }
   .chart-svg-wrap svg{ width:100%; height:auto; display:block; }
   .chart-svg-wrap rect{ transition:opacity .15s; }
   .chart-svg-wrap rect:hover{ opacity:.75; }
-  .chart-axis-label{ font-size:9px; fill:var(--muted); }
+  .chart-axis-label{ font-size:9px; fill:var(--muted); font-family:var(--font-mono); }
 
   .export-row{ display:flex; gap:10px; }
   .export-row .mini-btn{ flex:1; text-align:center; }
-  @media (max-width: 760px){ .grid{grid-template-columns:1fr;} .jobs{grid-template-columns:1fr;} .fields{grid-template-columns:1fr;} }
+
+  .rank-block{ background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:14px 16px; margin-top:14px; }
+  .rank-row{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+  .rank-name{ font-family:var(--font-mono); font-weight:700; font-size:14px; }
+  .rank-next{ font-size:10.5px; color:var(--muted); font-family:var(--font-mono); }
+
+  .cooldown-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-top:14px; }
+  .cooldown-card{ background:var(--panel-2); border:1px solid var(--line); border-radius:8px; padding:12px; }
+  .cooldown-card .cd-name{ font-size:12px; font-weight:700; margin-bottom:4px; }
+  .cooldown-card .cd-time{ font-family:var(--font-mono); font-size:19px; font-weight:700; font-variant-numeric:tabular-nums; }
+  .cooldown-card .cd-time.ready{ color:var(--ok); }
+  .cooldown-card .cd-time.waiting{ color:var(--bad); }
+  .cooldown-card button{ margin-top:8px; width:100%; }
+
+  @media (max-width: 760px){ .grid{grid-template-columns:1fr;} .jobs{grid-template-columns:1fr;} .fields{grid-template-columns:1fr;} .cooldown-grid{grid-template-columns:1fr;} h1{font-size:32px;} }
 </style>
 </head>
 <body>
@@ -139,7 +317,7 @@
   <header>
     <h1>Einsatz<span id="titleAccent">lohn</span></h1>
     <div class="clock-box">
-      <div id="durationClock">Dauer: <b id="durationDisplay">00:00</b></div>
+      <div id="durationClock">Dauer <b id="durationDisplay">00:00</b></div>
       <button class="clock-btn start" id="timerToggle">Start</button>
       <button class="clock-btn" id="timerReset">Reset</button>
     </div>
@@ -187,13 +365,21 @@
             </div>
           </div>
         </div>
+        <div class="rank-block" id="rankBlock" style="display:none;">
+          <div class="rank-row">
+            <span class="rank-name" id="rankName">—</span>
+            <span class="rank-next" id="rankNext">—</span>
+          </div>
+          <div class="progress-track"><div class="progress-fill" id="rankBarFill" style="width:0%;"></div></div>
+        </div>
       </div>
     </div>
     <div>
       <div class="ticket">
         <div class="ticket-stripe" id="stripe"></div>
         <div class="ticket-body">
-          <div class="ticket-row"><span id="ticketJob">Rettungsdienst</span><b id="ticketCat">FEUERWEHR</b></div>
+          <div class="ticket-row"><span>Job</span><b id="ticketJob">Rettungsdienst</b></div>
+          <div class="ticket-row"><span>Kategorie</span><b id="ticketCat">FEUERWEHR</b></div>
           <div class="ticket-row" id="rowXpWrap"><span>XP</span><b id="rowXp">0</b></div>
           <div class="ticket-row" id="rowZielWrap" style="display:none;"><span>Zielbetrag</span><b id="rowZiel">0 €</b></div>
           <div class="ticket-row"><span>Schichtdauer</span><b id="rowDuration">00:00</b></div>
@@ -212,7 +398,7 @@
   <div class="view" id="view-passiv">
     <div class="single">
       <div class="panel">
-        <p class="panel-title">Passives Gehalt <span style="font-weight:400;font-size:14px;color:var(--muted);">alle 10 Min.</span></p>
+        <p class="panel-title">Passives Gehalt <span style="font-family:var(--font-body);font-weight:400;font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0;">alle 10 Min.</span></p>
         <div class="switch-row" style="margin-bottom:10px;">
           <label for="groupMember">In der Roblox-Gruppe</label>
           <span class="switch"><input type="checkbox" id="groupMember" checked><span class="slider"></span></span>
@@ -233,7 +419,7 @@
   <div class="view" id="view-raub">
     <div class="single">
       <div class="panel">
-        <p class="panel-title">Raub-Rechner <span style="font-weight:400;font-size:14px;color:var(--muted);">Kriminelle</span></p>
+        <p class="panel-title">Raub-Rechner <span style="font-family:var(--font-body);font-weight:400;font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0;">Kriminelle</span></p>
         <div class="tabs" id="robTabs" style="margin-bottom:16px;">
           <button class="tab active" data-rob="kasse">Kassenraub</button>
           <button class="tab" data-rob="juwelier">Juwelier &amp; Bank</button>
@@ -247,13 +433,13 @@
 
         <div id="robJuwelier" style="display:none;">
           <div class="switch-row" style="margin-bottom:14px;">
-            <label for="crimeBoss">Crime Boss Gamepass (+25 % Verkaufspreis)</label>
+            <label for="crimeBoss">Crime Boss Gamepass (+25 % Rüstung &amp; höhere Verkaufspreise)</label>
             <span class="switch"><input type="checkbox" id="crimeBoss"><span class="slider"></span></span>
           </div>
           <div class="fields">
-            <div class="field"><label>Schmuck (Stk.)</label><input type="number" id="jewelryCount" value="0"></div>
-            <div class="field"><label>Goldbarren (Stk.)</label><input type="number" id="goldCount" value="0"></div>
-            <div class="field full"><label>Diamanten (Stk., 2.000 € beim Schmuggler)</label><input type="number" id="diamondCount" value="0"></div>
+            <div class="field"><label>Schmuck (Stk., 400 € / 500 € mit Crime Boss)</label><input type="number" id="jewelryCount" value="0"></div>
+            <div class="field"><label>Goldbarren (Stk., 1.000 € / 1.250 € mit Crime Boss)</label><input type="number" id="goldCount" value="0"></div>
+            <div class="field full"><label>Diamanten (Stk., 1.800 € / 2.500 € mit Crime Boss, beim Schmuggler)</label><input type="number" id="diamondCount" value="0"></div>
           </div>
         </div>
 
@@ -263,6 +449,10 @@
         </div>
         <div class="formula" id="robFormula" style="margin-top:8px;"></div>
         <button class="add-log-btn" id="addRobLogBtn" type="button">+ Zur Schicht hinzufügen</button>
+
+        <p class="section-label" style="margin-top:24px;">Raub-Cooldowns <span style="font-weight:400;">offizielle Werte</span></p>
+        <div class="cooldown-grid" id="cooldownGrid"></div>
+        <div class="formula" style="margin-top:10px;">Hinweis: Auf privaten Servern ist die Beute aller Raubüberfälle um 70 % reduziert.</div>
       </div>
     </div>
   </div>
@@ -270,7 +460,7 @@
   <div class="view" id="view-tracker">
     <div class="single">
       <div class="panel">
-        <p class="panel-title">XP-Tracker <span style="font-weight:400;font-size:14px;color:var(--muted);">Gesamtfortschritt</span></p>
+        <p class="panel-title">XP-Tracker <span style="font-family:var(--font-body);font-weight:400;font-size:13px;color:var(--muted);text-transform:none;letter-spacing:0;">Gesamtfortschritt</span></p>
 
         <div class="tabs" id="trackerTabs">
           <button class="tab active" data-sub="overview">Übersicht</button>
@@ -348,7 +538,26 @@
         </div>
 
         <div class="subview" id="sub-add">
-          <p class="section-label">Schicht eintragen <span style="font-weight:400;">XP &amp; Geld, für jede Stelle</span></p>
+          <p class="section-label">Startguthaben <span style="font-weight:400;">bereits vorher erfarmt — pro Stelle, zählt nur zur Gesamtsumme/Aufschlüsselung, nicht zu Tagesstatistik oder Rekorden</span></p>
+          <div class="fields" style="margin-bottom:0;">
+            <div class="field full">
+              <label>Stelle</label>
+              <select id="startJob"></select>
+            </div>
+            <div class="field">
+              <label>Bereits vorhandene XP</label>
+              <input type="number" id="startXp" placeholder="z. B. 12000">
+            </div>
+            <div class="field">
+              <label>Bereits vorhandenes Geld (€)</label>
+              <input type="number" id="startMoney" placeholder="z. B. 250000">
+            </div>
+          </div>
+          <button class="add-log-btn" id="saveStartBtn" type="button" style="background:var(--muted-2);color:#fff;">Startguthaben für diese Stelle speichern</button>
+          <div id="startList" class="log-list" style="margin-top:12px;"></div>
+          <div class="formula" id="startFormula" style="margin-top:10px;"></div>
+
+          <p class="section-label" style="margin-top:26px;">Schicht eintragen <span style="font-weight:400;">XP &amp; Geld, für jede Stelle</span></p>
           <div class="fields" style="margin-bottom:0;">
             <div class="field full">
               <label>Stelle</label>
@@ -393,9 +602,42 @@ const CATS = {
   polizei: { jobs: [{name:'Streife', mult:1.0}, {name:'Verkehrspolizei', mult:1.1}, {name:'SEK', mult:1.3}, {name:'Zivil', mult:1.2}] },
   sonstige: { jobs: [{name:'ADAC', mult:1.3}, {name:'Busfahrer', mult:1.2}, {name:'LKW-Fahrer', mult:1.2}] }
 };
-const COLORS = {feuerwehr:'#e8583a', polizei:'#3d7bf2', sonstige:'#f2b705', kriminell:'#8b5cf6', manual:'#94a3b8'};
+
+/* Offizielle Epauletten-Ränge (nur Titel, KEIN eigener Gehalts-Multiplikator laut Wiki) */
+const RANKS = {
+  polizei: [
+    {name:'Trainee Officer', xp:0}, {name:'Police Constable', xp:300}, {name:'Senior Constable', xp:600},
+    {name:'Chief Constable', xp:900}, {name:'Senior Chief Constable', xp:1200}, {name:'Inspector', xp:1500},
+    {name:'Senior Inspector', xp:2200}, {name:'Chief Inspector', xp:2900}, {name:'Senior Chief Inspector', xp:3600},
+    {name:'Superintendent', xp:4300}, {name:'Chief Superintendent', xp:5000}, {name:'Director', xp:7500},
+    {name:'Senior Director', xp:10000}, {name:'Deputy Chief', xp:12500}, {name:'Chief of Police', xp:15000},
+    {name:'State Police President', xp:20000}, {name:'Inspector of Police', xp:25000}, {name:'Inspector General', xp:30000}
+  ],
+  feuerwehr: [
+    {name:'Trainee Firefighter', xp:0}, {name:'Firefighter', xp:300}, {name:'Senior Firefighter', xp:600},
+    {name:'Chief Firefighter', xp:900}, {name:'Chief Firefighter (Sonderzulage)', xp:1200}, {name:'Officer Cadet', xp:1500},
+    {name:'Senior Fire Inspector Trainee', xp:2200}, {name:'Fire Inspector', xp:2900}, {name:'Senior Fire Inspector', xp:3600},
+    {name:'Fire Captain', xp:4300}, {name:'Fire Department Counselor', xp:5000}, {name:'Fire Chief', xp:7500},
+    {name:'Fire Referee', xp:10000}, {name:'Fire Chief II', xp:12500}, {name:'Senior Fire Chief', xp:15000},
+    {name:'Fire Director', xp:20000}, {name:'Chief Fire Director', xp:25000}, {name:'Senior Fire Director', xp:30000}
+  ]
+};
+
+/* Offizielle Raub-Cooldowns laut Wiki (in Minuten) */
+const ROBBERY_COOLDOWNS = [
+  {key:'bank', name:'Bank', mins:10},
+  {key:'kasse', name:'Kassenregister', mins:11},
+  {key:'safe', name:"Safe (Erwin's Club)", mins:10},
+  {key:'container', name:'Container', mins:13},
+  {key:'jeweler', name:'Juwelier', mins:14},
+  {key:'vending', name:'Automat', mins:14}
+];
+
+const COLORS = {feuerwehr:'#ff5a3c', polizei:'#3d7bf2', sonstige:'#ffb020', kriminell:'#a855f7', manual:'#7d8894'};
 let state = { cat: 'feuerwehr', jobIndex: 0, mode: 'toEUR' };
 let log = [];
+let cooldownEnds = {};
+let startBalances = {}; // { "cat::job": { xp: number, money: number } }
 
 /* ---------- Lokale Speicherung (kein Server, übersteht Neustart) ---------- */
 const STORAGE_KEY = 'einsatzlohn_tracker_v1';
@@ -407,7 +649,9 @@ function saveState(){
       groupMember: document.getElementById('groupMember').checked,
       crimeBoss: document.getElementById('crimeBoss').checked,
       goalMoney: document.getElementById('goalMoney').value,
-      goalXp: document.getElementById('goalXp').value
+      goalXp: document.getElementById('goalXp').value,
+      cooldownEnds: cooldownEnds,
+      startBalances: startBalances
     }));
   }catch(e){ console.warn('Speichern fehlgeschlagen:', e); }
 }
@@ -422,6 +666,8 @@ function loadState(){
     if(typeof data.crimeBoss === 'boolean') document.getElementById('crimeBoss').checked = data.crimeBoss;
     if(data.goalMoney !== undefined) document.getElementById('goalMoney').value = data.goalMoney;
     if(data.goalXp !== undefined) document.getElementById('goalXp').value = data.goalXp;
+    if(data.cooldownEnds && typeof data.cooldownEnds === 'object') cooldownEnds = data.cooldownEnds;
+    if(data.startBalances && typeof data.startBalances === 'object') startBalances = data.startBalances;
   }catch(e){ console.warn('Laden fehlgeschlagen:', e); }
 }
 function todayStr(){
@@ -484,6 +730,40 @@ document.getElementById('takeTimer').addEventListener('click', () => {
   calc();
 });
 
+/* ---------- Rang-Anzeige (nur Titel, kein eigener Multiplikator) ---------- */
+function updateRankDisplay(){
+  const block = document.getElementById('rankBlock');
+  const list = RANKS[state.cat];
+  if(!list){ block.style.display = 'none'; return; }
+  block.style.display = 'block';
+
+  let totalXp = 0;
+  log.forEach(e => { if(e.cat === state.cat) totalXp += (e.xp || 0); });
+  Object.keys(startBalances).forEach(key => {
+    const [cat, job] = key.split('::');
+    if(cat === state.cat) totalXp += (startBalances[key].xp || 0);
+  });
+  const liveXp = (state.mode === 'toEUR') ? (parseInt(document.getElementById('xp').value) || 0) : 0;
+  const previewXp = totalXp + liveXp;
+
+  let current = list[0], next = null;
+  for(let i = 0; i < list.length; i++){
+    if(previewXp >= list[i].xp) current = list[i];
+    else { next = list[i]; break; }
+  }
+  document.getElementById('rankName').textContent = current.name;
+  if(next){
+    const span = next.xp - current.xp;
+    const progressed = previewXp - current.xp;
+    const pct = span > 0 ? Math.min(100, (progressed/span)*100) : 100;
+    document.getElementById('rankBarFill').style.width = pct + '%';
+    document.getElementById('rankNext').textContent = `${(next.xp - previewXp).toLocaleString('de-DE')} XP bis ${next.name}`;
+  } else {
+    document.getElementById('rankBarFill').style.width = '100%';
+    document.getElementById('rankNext').textContent = 'Höchster Rang erreicht';
+  }
+}
+
 /* ---------- Rechner ---------- */
 function calc() {
   const job = CATS[state.cat].jobs[state.jobIndex];
@@ -519,6 +799,7 @@ function calc() {
     document.getElementById('totalLabel').textContent = 'Benötigte XP';
     document.getElementById('formula').innerHTML = `Rechnung: ${ziel} € / (30 × ${job.mult.toFixed(1)} Mult)`;
   }
+  updateRankDisplay();
 }
 
 document.getElementById('tabs').addEventListener('click', (e) => {
@@ -574,14 +855,30 @@ function renderLog(){
     else if(entry.cat === 'sonstige') sonstigeXp[entry.job] = (sonstigeXp[entry.job] || 0) + (entry.xp || 0);
     else if(entry.cat === 'kriminell' && entry.type === 'eur') krimMoney += entry.value;
   });
-  document.getElementById('totalXpStat').textContent = sumXp.toLocaleString('de-DE');
-  document.getElementById('totalMoneyStat').textContent = fmt(sumMoney) + ' €';
+
+  /* Startguthaben pro Stelle: fließt in Gesamtsumme + Nach-Stelle-Aufschlüsselung ein,
+     aber NICHT in Wochenziel, Heatmap, Verlauf oder Rekorde (keine Tagesbindung). */
+  let startTotalXp = 0, startTotalMoney = 0;
+  Object.keys(startBalances).forEach(key => {
+    const [cat, job] = key.split('::');
+    const bal = startBalances[key];
+    const xp = bal.xp || 0, money = bal.money || 0;
+    startTotalXp += xp; startTotalMoney += money;
+    if(cat === 'feuerwehr') feuerwehrXp += xp;
+    else if(cat === 'polizei') polizeiXp += xp;
+    else if(cat === 'sonstige') sonstigeXp[job] = (sonstigeXp[job] || 0) + xp;
+    else if(cat === 'kriminell') krimMoney += money;
+  });
+
+  document.getElementById('totalXpStat').textContent = (sumXp + startTotalXp).toLocaleString('de-DE');
+  document.getElementById('totalMoneyStat').textContent = fmt(sumMoney + startTotalMoney) + ' €';
   renderCategoryBreakdown(feuerwehrXp, polizeiXp, sonstigeXp, krimMoney);
   renderWeeklyGoal();
   renderRecords();
   renderChart(chartMetric);
 
   renderHeatmap();
+  updateRankDisplay();
   saveState();
 
   if(log.length === 0){
@@ -824,9 +1121,7 @@ document.getElementById('addLogBtn').addEventListener('click', () => {
   renderLog();
 });
 
-function populateManualJobSelect(){
-  const sel = document.getElementById('manualJob');
-  if(!sel) return;
+function jobOptionsHtml(){
   let html = '';
   html += '<optgroup label="Feuerwehr">';
   html += '<option value="feuerwehr::Feuerwehr">Feuerwehr</option>';
@@ -840,9 +1135,62 @@ function populateManualJobSelect(){
   html += '<optgroup label="Kriminell">';
   html += '<option value="kriminell::Kriminell">Kriminell</option>';
   html += '</optgroup>';
-  sel.innerHTML = html;
+  return html;
+}
+function populateManualJobSelect(){
+  const sel = document.getElementById('manualJob');
+  if(sel) sel.innerHTML = jobOptionsHtml();
+  const startSel = document.getElementById('startJob');
+  if(startSel) startSel.innerHTML = jobOptionsHtml();
 }
 populateManualJobSelect();
+
+/* ---------- Startguthaben (bereits vorher erfarmte XP/Geld, pro Stelle) ---------- */
+/* Fließt in die Gesamtsumme und die Nach-Stelle-Aufschlüsselung ein — NICHT in
+   Wochenziel, Heatmap, Verlaufsdiagramm oder Rekorde, da es keinem Datum zugeordnet ist. */
+function renderStartFormula(){
+  const list = document.getElementById('startList');
+  const formula = document.getElementById('startFormula');
+  if(!list || !formula) return;
+  const keys = Object.keys(startBalances);
+  list.innerHTML = '';
+  if(keys.length === 0){
+    formula.textContent = 'Noch kein Startguthaben gespeichert.';
+    return;
+  }
+  formula.textContent = 'Wird zur Gesamtsumme & Nach-Stelle-Aufschlüsselung addiert, zählt aber nicht für Rekorde, Wochenziel, Heatmap oder Verlauf.';
+  keys.forEach(key => {
+    const [cat, job] = key.split('::');
+    const bal = startBalances[key];
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    item.style.borderLeftColor = COLORS[cat] || COLORS.manual;
+    item.innerHTML = `
+      <div class="li-main">
+        <span class="li-job">${job}</span>
+        <span class="li-meta">${cat.toUpperCase()} · Startguthaben</span>
+      </div>
+      <span class="li-amount">${(bal.xp||0).toLocaleString('de-DE')} XP · ${fmt(bal.money||0)} €</span>
+      <button class="li-del" title="Entfernen">×</button>
+    `;
+    item.querySelector('.li-del').addEventListener('click', () => {
+      delete startBalances[key];
+      renderStartFormula();
+      renderLog();
+    });
+    list.appendChild(item);
+  });
+}
+document.getElementById('saveStartBtn').addEventListener('click', () => {
+  const key = document.getElementById('startJob').value;
+  const xp = parseInt(document.getElementById('startXp').value) || 0;
+  const money = parseFloat(document.getElementById('startMoney').value) || 0;
+  startBalances[key] = { xp, money };
+  document.getElementById('startXp').value = '';
+  document.getElementById('startMoney').value = '';
+  renderStartFormula();
+  renderLog();
+});
 
 document.getElementById('addManualXpBtn').addEventListener('click', () => {
   const [cat, job] = document.getElementById('manualJob').value.split('::');
@@ -925,6 +1273,14 @@ document.getElementById('robKasseReset').addEventListener('click', () => { kasse
 ['jewelryCount','goldCount','diamondCount'].forEach(id => document.getElementById(id).addEventListener('input', updateRob));
 document.getElementById('crimeBoss').addEventListener('change', () => { updateRob(); saveState(); });
 
+/*
+  Crime Boss Gamepass (offiziell laut Wiki):
+  - +25 % Rüstung beim Tragen der Crime-Boss-Ausrüstung
+  - Schmuck verkauft sich für 500 € statt 400 € beim Dealer
+  - Gold verkauft sich für 1.250 € statt 1.000 € beim Dealer/Schmuggler
+  - Diamanten verkaufen sich für 2.500 € statt 1.800 € beim Schmuggler (Spieler-Rückmeldung; Basiswert 1.800 € laut Wiki)
+  - 25 % Rabatt beim Kauf illegaler Items (nicht Teil dieser Verkaufs-Rechnung)
+*/
 function updateRob(){
   if(robTab === 'kasse'){
     document.getElementById('robTotal').textContent = fmt(kasseTotal) + ' €';
@@ -933,13 +1289,13 @@ function updateRob(){
     const crimeBoss = document.getElementById('crimeBoss').checked;
     const jewelryPrice = crimeBoss ? 500 : 400;
     const goldPrice = crimeBoss ? 1250 : 1000;
-    const diamondPrice = 2000;
+    const diamondPrice = crimeBoss ? 2500 : 1800;
     const jewelry = parseInt(document.getElementById('jewelryCount').value) || 0;
     const gold = parseInt(document.getElementById('goldCount').value) || 0;
     const diamonds = parseInt(document.getElementById('diamondCount').value) || 0;
     const total = jewelry * jewelryPrice + gold * goldPrice + diamonds * diamondPrice;
     document.getElementById('robTotal').textContent = fmt(total) + ' €';
-    document.getElementById('robFormula').innerHTML = `Rechnung: ${jewelry} × ${jewelryPrice} € (Schmuck) + ${gold} × ${goldPrice} € (Gold) + ${diamonds} × ${diamondPrice} € (Diamanten)`;
+    document.getElementById('robFormula').innerHTML = `Rechnung: ${jewelry} × ${jewelryPrice} € (Schmuck) + ${gold} × ${goldPrice} € (Gold) + ${diamonds} × ${diamondPrice} € (Diamanten, Schmuggler)${crimeBoss ? ' — Crime Boss aktiv: +25% Rüstung, höhere Schmuck-/Gold-Preise' : ''}`;
   }
 }
 
@@ -952,7 +1308,7 @@ document.getElementById('addRobLogBtn').addEventListener('click', () => {
     const crimeBoss = document.getElementById('crimeBoss').checked;
     const jewelryPrice = crimeBoss ? 500 : 400;
     const goldPrice = crimeBoss ? 1250 : 1000;
-    const diamondPrice = 2000;
+    const diamondPrice = crimeBoss ? 2500 : 1800;
     const jewelry = parseInt(document.getElementById('jewelryCount').value) || 0;
     const gold = parseInt(document.getElementById('goldCount').value) || 0;
     const diamonds = parseInt(document.getElementById('diamondCount').value) || 0;
@@ -968,6 +1324,47 @@ document.getElementById('addRobLogBtn').addEventListener('click', () => {
   renderLog();
 });
 
+/* ---------- Raub-Cooldowns (offizielle Werte) ---------- */
+function renderCooldowns(){
+  const grid = document.getElementById('cooldownGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  ROBBERY_COOLDOWNS.forEach(r => {
+    const card = document.createElement('div');
+    card.className = 'cooldown-card';
+    card.innerHTML = `
+      <div class="cd-name">${r.name} <span style="color:var(--muted);font-weight:400;">(${r.mins} Min.)</span></div>
+      <div class="cd-time" id="cd-time-${r.key}">Bereit</div>
+      <button class="mini-btn" type="button" id="cd-btn-${r.key}">Jetzt geraubt</button>
+    `;
+    grid.appendChild(card);
+    document.getElementById('cd-btn-' + r.key).addEventListener('click', () => {
+      cooldownEnds[r.key] = Date.now() + r.mins * 60 * 1000;
+      saveState();
+      tickCooldowns();
+    });
+  });
+  tickCooldowns();
+}
+function tickCooldowns(){
+  ROBBERY_COOLDOWNS.forEach(r => {
+    const el = document.getElementById('cd-time-' + r.key);
+    if(!el) return;
+    const end = cooldownEnds[r.key];
+    if(!end || Date.now() >= end){
+      el.textContent = 'Bereit';
+      el.classList.remove('waiting');
+      el.classList.add('ready');
+    } else {
+      const remaining = Math.ceil((end - Date.now()) / 1000);
+      el.textContent = fmtTime(remaining);
+      el.classList.remove('ready');
+      el.classList.add('waiting');
+    }
+  });
+}
+setInterval(tickCooldowns, 1000);
+
 /* ---------- Backup: Export / Import ---------- */
 document.getElementById('exportBtn').addEventListener('click', () => {
   const data = {
@@ -977,6 +1374,8 @@ document.getElementById('exportBtn').addEventListener('click', () => {
     crimeBoss: document.getElementById('crimeBoss').checked,
     goalMoney: document.getElementById('goalMoney').value,
     goalXp: document.getElementById('goalXp').value,
+    cooldownEnds: cooldownEnds,
+    startBalances: startBalances,
     exportedAt: new Date().toISOString()
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1007,7 +1406,9 @@ document.getElementById('importFile').addEventListener('change', (e) => {
       if(typeof data.crimeBoss === 'boolean') document.getElementById('crimeBoss').checked = data.crimeBoss;
       if(data.goalMoney !== undefined) document.getElementById('goalMoney').value = data.goalMoney;
       if(data.goalXp !== undefined) document.getElementById('goalXp').value = data.goalXp;
-      calcPassive(); updateRob(); renderLog();
+      if(data.cooldownEnds && typeof data.cooldownEnds === 'object') cooldownEnds = data.cooldownEnds;
+      if(data.startBalances && typeof data.startBalances === 'object') startBalances = data.startBalances;
+      calcPassive(); updateRob(); renderLog(); renderCooldowns(); renderStartFormula();
       alert('Backup erfolgreich importiert.');
     }catch(err){
       alert('Fehler beim Importieren: Datei ist kein gültiges Backup.');
@@ -1018,7 +1419,7 @@ document.getElementById('importFile').addEventListener('change', (e) => {
 });
 
 loadState();
-renderJobs(); calc(); renderLog(); calcPassive(); updateRob();
+renderJobs(); calc(); renderLog(); calcPassive(); updateRob(); renderCooldowns(); renderStartFormula();
 </script>
 </body>
 </html>
